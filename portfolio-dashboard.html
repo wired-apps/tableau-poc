@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Private Credit Portfolio — Executive Summary</title>
+
+<!-- Tableau Embedding API v3. Requires internet access when this file is opened in a browser. -->
+<script type="module" src="https://public.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js"></script>
+
+<style>
+  :root{
+    --page-bg:#eef1f8;
+    --card-bg:#ffffff;
+    --border-color:#e2e6f0;
+    --text-navy:#2b3350;
+    --text-gray:#8891a3;
+    --text-gray-italic:#9aa2b3;
+    --accent-blue:#a9c2f3;
+    --accent-blue-strong:#5578c9;
+    --accent-blue-pale:#dbe6fb;
+    --green-bg:#e2f1e0;
+    --green-text:#4c9a4c;
+    --red-bg:#fbe3e3;
+    --red-text:#d97373;
+    --radius:10px;
+    --shadow:0 1px 3px rgba(30,40,70,0.06), 0 1px 2px rgba(30,40,70,0.04);
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    background:var(--page-bg);
+    font-family:-apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color:var(--text-navy);
+  }
+
+  .dashboard{
+    max-width:1680px;
+    margin:0 auto;
+    padding:28px 32px 48px;
+  }
+
+  /* ---------- Header ---------- */
+  .dash-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:18px;
+  }
+
+  .dash-header h1{
+    font-family:Georgia, "Times New Roman", serif;
+    font-size:22px;
+    letter-spacing:0.5px;
+    color:var(--text-navy);
+    margin:0 0 4px 0;
+    text-transform:uppercase;
+  }
+
+  .subtitle{
+    font-style:italic;
+    color:var(--text-gray-italic);
+    font-size:13px;
+    margin:0;
+  }
+
+  .period-selector{
+    display:flex;
+    align-items:center;
+    gap:18px;
+  }
+
+  .period-label{
+    font-size:11px;
+    letter-spacing:1px;
+    color:var(--text-gray);
+  }
+
+  .period-value{
+    font-size:14px;
+    color:var(--text-navy);
+    padding:4px 14px;
+    border:1px solid var(--border-color);
+    border-radius:6px;
+    background:var(--card-bg);
+  }
+
+  /* ---------- Legend + Tabs row ---------- */
+  .legend-tabs-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:1px solid var(--border-color);
+    padding-bottom:10px;
+    margin-bottom:22px;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+
+  .legend{
+    display:flex;
+    gap:20px;
+    font-size:12px;
+    color:var(--text-gray);
+  }
+
+  .legend-item{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+  .dot.red{background:var(--red-text);}
+
+  .swatch{width:12px;height:9px;display:inline-block;border-radius:2px;}
+  .swatch.current{background:var(--accent-blue);}
+  .swatch.prior{background:var(--border-color);}
+
+  /* ---------- Body layout ---------- */
+  .dash-body{
+    display:flex;
+    gap:24px;
+    align-items:flex-start;
+  }
+
+  .kpi-sidebar{
+    width:260px;
+    flex:0 0 260px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    position:sticky;
+    top:24px;
+  }
+
+  .kpi-card{
+    background:var(--card-bg);
+    border:1px solid var(--border-color);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:14px 16px 16px;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .kpi-label{
+    font-size:11px;
+    letter-spacing:0.8px;
+    color:var(--text-gray);
+    font-weight:600;
+    margin-bottom:8px;
+  }
+
+  .content-area{
+    flex:1;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+  }
+
+  /* ---------- Cards ---------- */
+  .card{
+    background:var(--card-bg);
+    border:1px solid var(--border-color);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:16px 20px 20px;
+  }
+
+  .card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:12px;
+    flex-wrap:wrap;
+    gap:4px;
+  }
+
+  .card-header h2{
+    font-size:13px;
+    letter-spacing:0.6px;
+    text-transform:uppercase;
+    margin:0;
+    color:var(--text-navy);
+  }
+
+  .card-header .hint{
+    font-size:11.5px;
+    font-style:italic;
+    color:var(--text-gray-italic);
+    margin:0;
+  }
+
+  .compare-body{
+    display:flex;
+    gap:20px;
+    align-items:stretch;
+  }
+
+  .bar-col{
+    flex:0 0 280px;
+  }
+
+  .bar-col.wide{
+    flex:1;
+  }
+
+  .grid-2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+  }
+
+  .grid-3{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:20px;
+  }
+
+  /* ---------- Viz slots (placeholders for <tableau-viz>) ---------- */
+  .viz-slot{
+    position:relative;
+    width:100%;
+    border:1px dashed #c9d2e6;
+    border-radius:6px;
+    background:#f7f9fd;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+
+  .viz-slot::before{
+    content: attr(data-label);
+    font-size:11px;
+    line-height:1.4;
+    color:#aab3c5;
+    text-align:center;
+    padding:10px;
+  }
+
+  .viz-slot tableau-viz{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+  }
+
+  .h-kpi{height:190px;}
+  .h-bar{height:190px;}
+  .h-bar-tall{height:230px;}
+  .h-trend{height:300px;}
+  .h-map{height:420px;}
+  .h-wide{height:280px;}
+
+  @media (max-width: 1100px){
+    .dash-body{flex-direction:column;}
+    .kpi-sidebar{width:100%;flex:none;flex-direction:row;flex-wrap:wrap;}
+    .kpi-card{flex:1 1 220px;}
+    .compare-body{flex-direction:column;}
+    .grid-2, .grid-3{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="dashboard">
+
+  <header class="dash-header">
+    <div class="header-left">
+      <h1>Private Credit Portfolio — Executive Summary</h1>
+      <p class="subtitle">Comparison period: current month vs. prior period</p>
+    </div>
+    <div class="period-selector">
+      <span class="period-label">PERIOD</span>
+      <span class="period-value">2026</span>
+      <span class="period-value">August</span>
+    </div>
+  </header>
+
+  <div class="legend-tabs-row">
+    <div class="legend">
+      <span class="legend-item"><i class="dot red"></i>Below the Previous Period</span>
+      <span class="legend-item"><i class="swatch current"></i>Current Period</span>
+      <span class="legend-item"><i class="swatch prior"></i>Previous Period</span>
+    </div>
+  </div>
+
+  <div class="dash-body">
+
+    <!-- ================= KPI SIDEBAR (5 KPI tiles = slots 1-5) ================= -->
+    <aside class="kpi-sidebar">
+
+      <div class="kpi-card">
+        <div class="kpi-label">SETTLED LOAN BOOK $</div>
+        <!-- [Slot 1] Original: "Settled loan book $" KPI (number + sparkline) -->
+        <div class="viz-slot h-kpi" data-label="Paste Tableau Public URL — Settled Loan Book $ KPI">
+          <tableau-viz src="https://public.tableau.com/views/BorrowerHome/TotalSettledLoanBooksin" toolbar="hidden" hide-tabs></tableau-viz>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">WON DEALS $</div>
+        <!-- [Slot 2] Original: "Won Deals $" KPI (number + sparkline) -->
+        <div class="viz-slot h-kpi" data-label="Paste Tableau Public URL — Won Deals $ KPI">
+          <tableau-viz src="https://public.tableau.com/views/BorrowerHome/TotalWonDealsin" toolbar="hidden" hide-tabs></tableau-viz>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">NEW BORROWERS</div>
+        <!-- [Slot 3] Original: "New Borrowers" KPI (number + sparkline) -->
+        <div class="viz-slot h-kpi" data-label="Paste Tableau Public URL — New Borrowers KPI">
+          <tableau-viz src="https://public.tableau.com/views/BorrowerHome/TotalBorrowersOnboarded" toolbar="hidden" hide-tabs></tableau-viz>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">ENQUIRIES (LAST 30 DAYS)</div>
+        <!-- [Slot 4] Original: "Enquiries in Last 30 days" KPI (number + sparkline) -->
+        <div class="viz-slot h-kpi" data-label="Paste Tableau Public URL — Enquiries (30d) KPI">
+          <tableau-viz src="https://public.tableau.com/views/BorrowerHome/TotalEnquiriesinlast30" toolbar="hidden" hide-tabs></tableau-viz>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">CONVERSION RATE</div>
+        <!-- [Slot 5] Original: "Conversion Rate" KPI (number + sparkline) -->
+        <div class="viz-slot h-kpi" data-label="Paste Tableau Public URL — Conversion Rate KPI">
+          <tableau-viz src="https://public.tableau.com/views/BorrowerHome/ConversionRate" toolbar="hidden" hide-tabs></tableau-viz>
+        </div>
+      </div>
+
+    </aside>
+
+    <main class="content-area">
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <h2>Loan Book Growth</h2>
+              <p class="hint">Cumulative loan book value, current vs. prior years</p>
+            </div>
+            <!-- [Slot 17] Original: "Loan books Growth Chart" -->
+            <div class="viz-slot h-trend" data-label="Paste Tableau Public URL — Loan Books Growth Chart">
+              <tableau-viz src=""></tableau-viz>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Assets Under Management</h2>
+              <p class="hint">Monthly AUM trend</p>
+            </div>
+            <!-- [Slot 18] Original: "Assets under Management" -->
+            <div class="viz-slot h-trend" data-label="Paste Tableau Public URL — Assets Under Management">
+              <tableau-viz src=""></tableau-viz>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>Loan Book Concentration</h2>
+            <p class="hint">Geographic distribution of settled loans</p>
+          </div>
+          <!-- [Slot 19] Original: "Loan book concentration" (map) -->
+          <div class="viz-slot h-map" data-label="Paste Tableau Public URL — Loan Book Concentration Map">
+            <tableau-viz src=""></tableau-viz>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>Distressed vs. Performing Loans</h2>
+            <p class="hint">Monthly split, current period</p>
+          </div>
+          <!-- [Slot 20] Original: "Distressed loans vs Performing loans" -->
+          <div class="viz-slot h-wide" data-label="Paste Tableau Public URL — Distressed vs Performing Loans">
+            <tableau-viz src=""></tableau-viz>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <h2>Settled Loan Books by Type</h2>
+              <p class="hint">Monthly breakdown</p>
+            </div>
+            <!-- [Slot 22] Original: "Settled Loan Books by Type" -->
+            <div class="viz-slot h-wide" data-label="Paste Tableau Public URL — Settled Loan Books by Type">
+              <tableau-viz src=""></tableau-viz>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Loan Books Settled — Size &amp; Month</h2>
+              <p class="hint">Monthly breakdown by deal size</p>
+            </div>
+            <!-- [Slot 23] Original: "Loan Books settled by size and month" -->
+            <div class="viz-slot h-wide" data-label="Paste Tableau Public URL — Loan Books Settled by Size & Month">
+              <tableau-viz src=""></tableau-viz>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <h2>Loan Book by Type</h2>
+              <p class="hint">Distribution of settled loan book by asset type</p>
+            </div>
+            <!-- [Slot 6] Original: "Loan book by Type" (pie) -->
+            <div class="viz-slot h-bar-tall" data-label="Paste Tableau Public URL — Loan Book by Type (bar list)">
+              <tableau-viz src=""></tableau-viz>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Loan Book by Seniority</h2>
+              <p class="hint">Distribution of settled loan book by seniority</p>
+            </div>
+            <!-- [Slot 10] Original: "Loan type by Seniority" (pie) -->
+            <div class="viz-slot h-bar-tall" data-label="Paste Tableau Public URL — Loan Type by Seniority (bar list)">
+              <tableau-viz src=""></tableau-viz>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>Geographic Concentration</h2>
+            <p class="hint">Click a state to filter</p>
+          </div>
+          <div class="compare-body">
+            <!-- [Slot 14] Original: "Loan book concentration by State" (pie) -->
+            <div class="bar-col wide viz-slot h-bar-tall" data-label="Paste Tableau Public URL — Loan Book Concentration by State">
+              <tableau-viz src=""></tableau-viz>
+            </div>
+            <!-- [Slot 15] Original: "Repayments by State" (pie) -->
+            <div class="bar-col wide viz-slot h-bar-tall" data-label="Paste Tableau Public URL — Repayments by State">
+              <tableau-viz src=""></tableau-viz>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <h2>Deals Closed</h2>
+              <p class="hint">Last 12 months</p>
+            </div>
+            <!-- [Slot 21] Original: "Deals closed in last 12 months" -->
+            <div class="viz-slot h-bar-tall" data-label="Paste Tableau Public URL — Deals Closed (12mo)">
+              <tableau-viz src=""></tableau-viz>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Deal Pipeline by Stage</h2>
+              <p class="hint">Last 12 months</p>
+            </div>
+            <!-- [Slot 16] Original: "Deals in last 12 months by Stage" (funnel) -->
+            <div class="viz-slot h-bar-tall" data-label="Paste Tableau Public URL — Deal Pipeline by Stage">
+              <tableau-viz src=""></tableau-viz>
+            </div>
+          </div>
+        </div>
+
+    </main>
+  </div>
+</div>
+
+</body>
+</html>
